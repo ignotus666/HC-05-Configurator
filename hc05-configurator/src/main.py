@@ -236,50 +236,6 @@ class HC05Configurator(QMainWindow):
             QMessageBox.critical(self, "Serial Error", str(e))
         return None
 
-    def query_name(self):
-        self.send_at_command('AT+NAME?')
-
-    def set_name(self):
-        name = self.command_fields['NAME'].text().strip()
-        if name:
-            self.send_at_command(f'AT+NAME={name}')
-
-    def query_role(self):
-        self.send_at_command('AT+ROLE?')
-
-    def set_role(self):
-        role = self.command_fields['ROLE'].text().strip()
-        if role in ['0', '1', '2']:
-            self.send_at_command(f'AT+ROLE={role}')
-        else:
-            QMessageBox.warning(self, "Invalid Role", "Role must be 0 (Slave), 1 (Master), or 2 (Slave-Loop)")
-
-    def query_password(self):
-        self.send_at_command('AT+PSWD?')
-
-    def set_password(self):
-        pswd = self.command_fields['PSWD'].text().strip()
-        if pswd:
-            self.send_at_command(f'AT+PSWD={pswd}')
-
-    def query_uart(self):
-        self.send_at_command('AT+UART?')
-
-    def set_uart(self):
-        uart = self.command_fields['UART'].text().strip()
-        if uart:
-            self.send_at_command(f'AT+UART={uart}')
-
-    def query_cmode(self):
-        self.send_at_command('AT+CMODE?')
-
-    def set_cmode(self):
-        cmode = self.command_fields['CMODE'].text().strip()
-        if cmode in ['0', '1', '2']:
-            self.send_at_command(f'AT+CMODE={cmode}')
-        else:
-            QMessageBox.warning(self, "Invalid CMODE", "CMODE must be 0, 1, or 2.")
-
     def load_command_prefs(self):
         prefs = {cmd["key"]: (cmd["key"] in DEFAULT_ENABLED) for cmd in ALL_AT_COMMANDS}
         if os.path.exists(CONFIG_PATH):
