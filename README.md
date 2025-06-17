@@ -9,10 +9,12 @@ By default the user interface lists some of the most typical AT commands, but th
 
 ## Requirements
 
-To run this project, you need to install the following dependencies:
+To build this project, you need to install the following dependencies:
 
 - PyQt5: For creating the GUI.
 - pyserial: For serial communication with the HC-05 module.
+
+A .deb package and Window installer are included if you prefer not to build it yourself.
 
 ## Usage
 
