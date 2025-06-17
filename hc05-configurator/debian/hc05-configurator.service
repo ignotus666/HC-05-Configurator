@@ -1,0 +1,9 @@
+[Unit]
+Description=HC-05 Configurator GUI
+
+[Service]
+Type=simple
+ExecStart=/usr/bin/hc05-configurator
+
+[Install]
+WantedBy=graphical.target

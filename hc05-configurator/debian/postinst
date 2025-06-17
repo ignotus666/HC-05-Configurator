@@ -1,0 +1,7 @@
+#!/bin/bash
+set -e
+
+# Update icon cache after install
+if [ -x /usr/bin/gtk-update-icon-cache ]; then
+    /usr/bin/gtk-update-icon-cache -f /usr/share/icons/hicolor || true
+fi

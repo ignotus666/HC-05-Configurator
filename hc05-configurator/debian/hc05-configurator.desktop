@@ -1,0 +1,8 @@
+[Desktop Entry]
+Name=HC-05 Configurator
+Comment=Configure HC-05 Bluetooth modules
+Exec=hc05-configurator
+Icon=hc-05
+Terminal=false
+Type=Application
+Categories=Development;
