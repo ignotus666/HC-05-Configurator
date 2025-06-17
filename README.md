@@ -14,7 +14,7 @@ To build this project, you need to install the following dependencies:
 - PyQt5: For creating the GUI.
 - pyserial: For serial communication with the HC-05 module.
 
-A .deb package and Windows installer are included if you prefer not to build it yourself. [Downloads](https://github.com/ignotus666/HC-05-Configurator/releases/tag/v0.0.5)
+A .deb package and Windows installer are included if you prefer not to build it yourself: [downloads](https://github.com/ignotus666/HC-05-Configurator/releases/tag/v0.0.5)
 
 ## Usage
 
