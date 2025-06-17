@@ -1,5 +1,5 @@
 # HC-05 Configurator
-![HC-05-configurator_pic](https://github.com/user-attachments/assets/7b77f596-b9d0-4e0d-8b73-48dabe2bd9a3)
+![hc05-configurator](https://github.com/user-attachments/assets/6505dca0-ee9e-46a3-a57c-362523066c6c)
 
 A Python application designed to configure HC-05 Bluetooth devices through a graphical user interface. The application allows users to query and set various parameters of the HC-05 module using AT commands. I use a USB-FTDI converter.
 
@@ -14,12 +14,12 @@ To build this project, you need to install the following dependencies:
 - PyQt5: For creating the GUI.
 - pyserial: For serial communication with the HC-05 module.
 
-A .deb package and Windows installer are included if you prefer not to build it yourself: [downloads](https://github.com/ignotus666/HC-05-Configurator/releases/tag/v0.0.5)
+A .deb package and Windows installer are included if you prefer not to build it yourself: [downloads](https://github.com/ignotus666/HC-05-Configurator/releases)
 
 ## Usage
 
 1. Connect your HC-05 module to your computer via a USB-FTDI converter.
-2. Open the application and select the appropriate serial port (e.g., `/dev/ttyUSB0`).
+2. Open the application and select the appropriate serial port if not automatically connected (e.g., `/dev/ttyUSB0`).
 3. "Query" buttons will show the module's setting for the selected parameter.
 4. "Set" buttons will send the argument(s) entered into the field for the corresponding parameter. It is not necessary to enter the full command, just the argument(s).
 
