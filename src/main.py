@@ -105,9 +105,21 @@ class HC05Configurator(QMainWindow):
                 self.layout.insertWidget(0, icon_label, alignment=Qt.AlignLeft)
                 break
 
+        # Port selection and connection status
+        port_layout = QHBoxLayout()
         self.port_selector = QComboBox()
-        self.layout.addWidget(QLabel("Select Serial Port:"))
-        self.layout.addWidget(self.port_selector)
+        port_layout.addWidget(QLabel("Select Serial Port:"))
+        port_layout.addWidget(self.port_selector)
+        refresh_btn = QPushButton("Refresh")
+        refresh_btn.setToolTip("Refresh the list of serial ports.")
+        refresh_btn.clicked.connect(self.refresh_ports)
+        port_layout.addWidget(refresh_btn)
+        # Connection status indicator
+        self.conn_status = QLabel()
+        self.conn_status.setFixedWidth(16)
+        self.conn_status.setToolTip("Serial connection status")
+        port_layout.addWidget(self.conn_status)
+        self.layout.addLayout(port_layout)
         self.refresh_ports()
         self.port_selector.currentIndexChanged.connect(self.open_selected_port)
 
@@ -118,6 +130,11 @@ class HC05Configurator(QMainWindow):
         self.terminal_output.setMinimumHeight(180)
         self.layout.addWidget(QLabel("Terminal Output:"))
         self.layout.addWidget(self.terminal_output)
+        # Place Clear Terminal button directly under the terminal output
+        clear_terminal_btn = QPushButton("Clear Terminal")
+        clear_terminal_btn.setToolTip("Clear the terminal output area.")
+        clear_terminal_btn.clicked.connect(self.clear_terminal)
+        self.layout.addWidget(clear_terminal_btn)
 
         # Use a grid layout for commands
         from PyQt5.QtWidgets import QGridLayout
@@ -142,11 +159,18 @@ class HC05Configurator(QMainWindow):
         btn_layout.addWidget(set_all_btn)
         self.layout.addLayout(btn_layout)
 
-        # Add Clear Terminal button
-        clear_terminal_btn = QPushButton("Clear Terminal")
-        clear_terminal_btn.setToolTip("Clear the terminal output area.")
-        clear_terminal_btn.clicked.connect(self.clear_terminal)
-        self.layout.addWidget(clear_terminal_btn)
+        # Custom command section
+        custom_layout = QHBoxLayout()
+        self.custom_cmd_input = QLineEdit()
+        self.custom_cmd_input.setPlaceholderText("Enter custom AT command (e.g. AT+XYZ?)")
+        self.custom_cmd_input.returnPressed.connect(self.send_custom_command)
+        custom_send_btn = QPushButton("Send")
+        custom_send_btn.setToolTip("Send custom AT command to the device.")
+        custom_send_btn.clicked.connect(self.send_custom_command)
+        custom_layout.addWidget(QLabel("Custom Command:"))
+        custom_layout.addWidget(self.custom_cmd_input)
+        custom_layout.addWidget(custom_send_btn)
+        self.layout.addLayout(custom_layout)
 
         self.restore_window_geometry()
 
@@ -161,17 +185,21 @@ class HC05Configurator(QMainWindow):
         self._batch_last_key = None
 
     def refresh_ports(self):
+        self.port_selector.blockSignals(True)
         self.port_selector.clear()
         try:
             import serial.tools.list_ports
             ports = [p.device for p in serial.tools.list_ports.comports()]
         except Exception:
-            # Fallback for Linux
             if platform.system() == 'Windows':
                 ports = [f'COM{i}' for i in range(1, 21)]
             else:
                 import glob
+                # Only list /dev/ttyUSB* and /dev/ttyACM*, not /dev/ttyS*
                 ports = glob.glob('/dev/ttyUSB*') + glob.glob('/dev/ttyACM*')
+        # Filter out /dev/ttyS* on Linux if any slipped in
+        if platform.system() != 'Windows':
+            ports = [p for p in ports if not p.startswith('/dev/ttyS')]
         self.port_selector.addItems(ports)
         # Auto-select /dev/ttyUSB0 on Linux if present
         if ports:
@@ -181,7 +209,8 @@ class HC05Configurator(QMainWindow):
                 self.port_selector.setCurrentIndex(idx)
             else:
                 self.port_selector.setCurrentIndex(0)
-            self.open_selected_port()
+        self.port_selector.blockSignals(False)
+        self.open_selected_port()
 
     def open_selected_port(self):
         if self.serial:
@@ -190,9 +219,21 @@ class HC05Configurator(QMainWindow):
         if port:
             try:
                 self.serial = serial.Serial(port, 38400, timeout=1)
+                self.set_connection_status(True)
             except Exception as e:
+                self.set_connection_status(False)
                 QMessageBox.critical(self, "Serial Error", f"Could not open port {port}: {e}")
                 self.serial = None
+        else:
+            self.set_connection_status(False)
+
+    def set_connection_status(self, connected):
+        if connected:
+            self.conn_status.setStyleSheet("background-color: #0f0; border-radius: 8px;")
+            self.conn_status.setToolTip("Connected")
+        else:
+            self.conn_status.setStyleSheet("background-color: #f00; border-radius: 8px;")
+            self.conn_status.setToolTip("Not connected")
 
     def append_terminal(self, text):
         self.terminal_output.append(text)
@@ -288,25 +329,27 @@ class HC05Configurator(QMainWindow):
             label.setToolTip(cmd["tooltip"])
             field = QLineEdit()
             field.setPlaceholderText(cmd["param_hint"])
+            # Pressing Enter in the field triggers Send
+            field.returnPressed.connect(lambda k=key: self._set_command(k))
             self.command_fields[key] = field
             query_btn = QPushButton("Query")
             query_btn.setToolTip(f"Query {cmd['label']}")
-            set_btn = QPushButton("Set")
-            set_btn.setToolTip(f"Set {cmd['label']}")
+            send_btn = QPushButton("Send")
+            send_btn.setToolTip(f"Send {cmd['label']}")
             if key in NO_PARAM_COMMANDS:
-                set_btn.setEnabled(False)
+                send_btn.setEnabled(False)
                 field.setEnabled(False)
             self.command_query_buttons[key] = query_btn
-            self.command_set_buttons[key] = set_btn
+            self.command_set_buttons[key] = send_btn
             # Fix lambda capture for button connections
             query_btn.clicked.connect(lambda _, k=key: self._query_command(k))
-            set_btn.clicked.connect(lambda _, k=key: self._set_command(k))
+            send_btn.clicked.connect(lambda _, k=key: self._set_command(k))
             # Add to grid
             self.grid.addWidget(label, row, col*4)
             self.grid.addWidget(query_btn, row, col*4+1)
-            self.grid.addWidget(set_btn, row, col*4+2)
+            self.grid.addWidget(send_btn, row, col*4+2)
             self.grid.addWidget(field, row, col*4+3)
-            self.command_widgets[key] = [label, query_btn, set_btn, field]
+            self.command_widgets[key] = [label, query_btn, send_btn, field]
             row += 1
             if row == max_rows:
                 row = 0
@@ -505,11 +548,75 @@ class HC05Configurator(QMainWindow):
         self._batch_waiting = False
         self._process_next_batch_command()
 
+    def validate_field(self, key, value):
+        # Validation for all known commands
+        if key == "UART":
+            # Should be baud,stop,parity (e.g. 9600,0,0)
+            parts = value.split(",")
+            if len(parts) != 3 or not all(p.strip().isdigit() for p in parts[:2]):
+                return False
+        elif key == "ROLE":
+            if value not in ["0", "1", "2"]:
+                return False
+        elif key == "CMODE":
+            if value not in ["0", "1", "2"]:
+                return False
+        elif key == "PSWD":
+            if not (4 <= len(value) <= 16):
+                return False
+        elif key == "BIND":
+            # Bluetooth address: 12 hex digits, optionally with colons
+            import re
+            if not re.match(r"^([0-9A-Fa-f]{2}:){5}[0-9A-Fa-f]{2}$|^[0-9A-Fa-f]{12}$", value):
+                return False
+        elif key == "CLASS":
+            # Should be a hex number (e.g. 0x1F00)
+            if not (value.startswith("0x") and all(c in "0123456789abcdefABCDEF" for c in value[2:])):
+                return False
+        elif key == "INQM":
+            # mode,max_num,length (all ints)
+            parts = value.split(",")
+            if len(parts) != 3 or not all(p.strip().isdigit() for p in parts):
+                return False
+        elif key == "IPSCAN":
+            # interval,window,interval,window (all ints)
+            parts = value.split(",")
+            if len(parts) != 4 or not all(p.strip().isdigit() for p in parts):
+                return False
+        elif key == "POLAR":
+            # PIO,level (both ints)
+            parts = value.split(",")
+            if len(parts) != 2 or not all(p.strip().isdigit() for p in parts):
+                return False
+        elif key == "PIO":
+            # pin,level (both ints)
+            parts = value.split(",")
+            if len(parts) != 2 or not all(p.strip().isdigit() for p in parts):
+                return False
+        elif key == "SADDR":
+            # Bluetooth address
+            import re
+            if not re.match(r"^([0-9A-Fa-f]{2}:){5}[0-9A-Fa-f]{2}$|^[0-9A-Fa-f]{12}$", value):
+                return False
+        elif key == "ADCN":
+            if not value.isdigit():
+                return False
+        elif key == "ENQ":
+            if value not in ["0", "1"]:
+                return False
+        # Add more as needed
+        return True
+
     def _set_command(self, key, batch_mode=False):
         value = self.command_fields[key].text().strip()
         if not value and key not in {"RESET", "INIT", "INQ", "DISC", "ORGL", "RMAAD"}:
             if not batch_mode:
                 QMessageBox.warning(self, "Input Required", "Please enter a value.")
+            return
+        # Validate field before sending
+        if value and not self.validate_field(key, value):
+            if not batch_mode:
+                QMessageBox.warning(self, "Invalid Input", f"Invalid value for {key}.")
             return
         # Map to specific method if implemented, else generic
         if key == "NAME":
@@ -556,6 +663,11 @@ class HC05Configurator(QMainWindow):
 
     def clear_terminal(self):
         self.terminal_output.clear()
+
+    def send_custom_command(self):
+        cmd = self.custom_cmd_input.text().strip()
+        if cmd:
+            self.send_at_command(cmd)
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)
