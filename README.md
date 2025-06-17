@@ -1,5 +1,6 @@
 # HC-05 Configurator
-![hc05-configurator](https://github.com/user-attachments/assets/6505dca0-ee9e-46a3-a57c-362523066c6c)
+![hc05-configurator](https://github.com/user-attachments/assets/a58ffb51-c061-48f1-8877-80cd2eebe5e7)
+
 
 A Python application designed to configure HC-05 Bluetooth devices through a graphical user interface. The application allows users to query and set various parameters of the HC-05 module using AT commands. I use a USB-FTDI converter.
 
