@@ -1,7 +1,6 @@
 import sys
-import glob
 from PyQt5.QtWidgets import QApplication, QMainWindow, QVBoxLayout, QWidget, QPushButton, QLabel, QLineEdit, QComboBox, QMessageBox, QHBoxLayout, QTextEdit, QMenuBar, QAction, QFileDialog, QDialog, QCheckBox, QDialogButtonBox
-from PyQt5.QtCore import Qt, QTimer, QEventLoop
+from PyQt5.QtCore import Qt, QTimer
 from PyQt5.QtGui import QPixmap
 import serial
 import time
@@ -558,10 +557,7 @@ class HC05Configurator(QMainWindow):
     def clear_terminal(self):
         self.terminal_output.clear()
 
-print('main.py starting...')
-
 if __name__ == "__main__":
-    print('Launching QApplication...')
     app = QApplication(sys.argv)
     window = HC05Configurator()
     sys.exit(app.exec_())
