@@ -21,8 +21,8 @@ A .deb package and Windows installer are included if you prefer not to build it 
 1. Connect your HC-05 module to your computer via a USB-FTDI converter.
 2. Open the application and select the appropriate serial port (e.g., `/dev/ttyUSB0`).
 3. "Query" buttons will show the module's setting for the selected parameter.
-4. "Set" buttons will send the argument(s) entered into the field for the corresponding paramter. It is not necessary to enter the full command, just the argument(s).
+4. "Set" buttons will send the argument(s) entered into the field for the corresponding parameter. It is not necessary to enter the full command, just the argument(s).
 
 It is possible to save profiles and load them. Any arguments that have been entered into the parameter fields (either manually by the user or by using "Query") can be saved to a .cfg file.
 
-**Note**: some versions of HC-05 modules (particularly cheap Chinese knock-offs) will not allow you to set or even query certain parameters. Some modules require you to keep the "state" button held down to enter full AT mode, while others may need the "EN" connected to 3.3V. YMMV.
+**Note**: some versions of HC-05 modules (particularly cheap Chinese knock-offs) will not allow you to set or even query certain parameters. Some modules require you to keep the "state" button held down to enter full AT mode, while others may need the "EN" pin connected to 3.3V. YMMV.
