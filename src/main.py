@@ -48,6 +48,8 @@ ALL_AT_COMMANDS = [
 # Default enabled commands
 DEFAULT_ENABLED = {"NAME", "PSWD", "UART", "CMODE"}
 NO_PARAM_COMMANDS = {"RESET", "INIT", "INQ", "DISC", "ORGL", "RMAAD", "AT", "VERSION", "ADDR", "MRAD", "STATE"}
+# Identify commands that are 'action only' (no query, no field, just Send)
+ACTION_ONLY_COMMANDS = {"RESET", "ORGL", "INIT", "INQ", "DISC", "RMAAD", "Q", "PAIR", "LINK"}
 
 class HC05Configurator(QMainWindow):
     def __init__(self):
@@ -324,32 +326,43 @@ class HC05Configurator(QMainWindow):
         enabled_cmds = [cmd for cmd in ALL_AT_COMMANDS if self.command_prefs.get(cmd["key"], False)]
         for cmd in enabled_cmds:
             key = cmd["key"]
-            # Create row widgets
             label = QLabel(cmd["label"])
             label.setToolTip(cmd["tooltip"])
-            field = QLineEdit()
-            field.setPlaceholderText(cmd["param_hint"])
-            # Pressing Enter in the field triggers Send
-            field.returnPressed.connect(lambda k=key: self._set_command(k))
-            self.command_fields[key] = field
-            query_btn = QPushButton("Query")
-            query_btn.setToolTip(f"Query {cmd['label']}")
-            send_btn = QPushButton("Send")
-            send_btn.setToolTip(f"Send {cmd['label']}")
-            if key in NO_PARAM_COMMANDS:
-                send_btn.setEnabled(False)
-                field.setEnabled(False)
-            self.command_query_buttons[key] = query_btn
-            self.command_set_buttons[key] = send_btn
-            # Fix lambda capture for button connections
-            query_btn.clicked.connect(lambda _, k=key: self._query_command(k))
-            send_btn.clicked.connect(lambda _, k=key: self._set_command(k))
-            # Add to grid
-            self.grid.addWidget(label, row, col*4)
-            self.grid.addWidget(query_btn, row, col*4+1)
-            self.grid.addWidget(send_btn, row, col*4+2)
-            self.grid.addWidget(field, row, col*4+3)
-            self.command_widgets[key] = [label, query_btn, send_btn, field]
+            # Action-only: no field, no query, just Send
+            if key in ACTION_ONLY_COMMANDS:
+                query_btn = QPushButton("Query")
+                query_btn.setEnabled(False)
+                send_btn = QPushButton("Send")
+                send_btn.setToolTip(f"Send {cmd['label']}")
+                send_btn.clicked.connect(lambda _, k=key: self._set_command(k))
+                self.command_query_buttons[key] = query_btn
+                self.command_set_buttons[key] = send_btn
+                self.grid.addWidget(label, row, col*4)
+                self.grid.addWidget(query_btn, row, col*4+1)
+                self.grid.addWidget(send_btn, row, col*4+2)
+                # No field for action-only
+                self.command_widgets[key] = [label, query_btn, send_btn]
+            else:
+                field = QLineEdit()
+                field.setPlaceholderText(cmd["param_hint"])
+                field.returnPressed.connect(lambda k=key: self._set_command(k))
+                self.command_fields[key] = field
+                query_btn = QPushButton("Query")
+                query_btn.setToolTip(f"Query {cmd['label']}")
+                send_btn = QPushButton("Send")
+                send_btn.setToolTip(f"Send {cmd['label']}")
+                if key in NO_PARAM_COMMANDS:
+                    send_btn.setEnabled(False)
+                    field.setEnabled(False)
+                self.command_query_buttons[key] = query_btn
+                self.command_set_buttons[key] = send_btn
+                query_btn.clicked.connect(lambda _, k=key: self._query_command(k))
+                send_btn.clicked.connect(lambda _, k=key: self._set_command(k))
+                self.grid.addWidget(label, row, col*4)
+                self.grid.addWidget(query_btn, row, col*4+1)
+                self.grid.addWidget(send_btn, row, col*4+2)
+                self.grid.addWidget(field, row, col*4+3)
+                self.command_widgets[key] = [label, query_btn, send_btn, field]
             row += 1
             if row == max_rows:
                 row = 0
